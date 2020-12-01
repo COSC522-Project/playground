@@ -10,6 +10,7 @@ TO DO
 """
 
 import sys
+import time
 
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
@@ -21,8 +22,29 @@ from sklearn.cluster import KMeans
 from . import util
 
 
-def classify(X, y, X_test, method='mpp', **kwargs):
-    """Train and predict using specified classifier."""
+def classify(X_train, y_train, X_test, method='mpp', **kwargs):
+    """Train and predict using specified classifier.
+    
+    Parameters
+    ----------
+    X_train : NumPy array
+        The training feature matrix, shape (n_train_samples, n_classes).
+    y_train : NumPy array
+        The training feature labels, shape (n_train_samples,)
+    X_test : NumPy array
+        The testing feature matrix, shape (n_test_samples, n_classes).
+    method : str
+        The classification method to use. Options are ['mpp', 'knn', 
+        'neural_network', 'decision_tree', 'svm', 'kmeans']. All methods use
+        the sklearn library except 'mpp'.
+    kwargs : dict
+        Key word arguments for the classifier constructor.
+        
+    Returns
+    -------
+    y_pred : NumPy array, shape (n,)
+        Class labels for each testing point.
+    """
     classifiers = {
         'mpp': MPP,
         'knn': KNeighborsClassifier,
@@ -32,9 +54,10 @@ def classify(X, y, X_test, method='mpp', **kwargs):
         'kmeans': KMeans
     }
     clf = classifiers[method](**kwargs)
-    clf.fit(X, y)
+    t0 = time.time()
+    clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
-    return y_pred
+    return y_pred, time.time() - t0
 
 
 def mpp(Tr, yTr, Te, cases, P):
