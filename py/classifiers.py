@@ -13,6 +13,7 @@ import sys
 import time
 
 import numpy as np
+import scipy
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -171,6 +172,8 @@ class MPP:
         self.classes = np.unique(y)
         n_classes = len(self.classes)
         self.P = np.ones(n_classes)/n_classes if P is None else P
+        if type(X) is scipy.sparse.csr.csr_matrix:
+            X = X.toarray()
         for c in self.classes:
             _X = X[y == c]  
             self.covs.append(np.cov(_X.T))
