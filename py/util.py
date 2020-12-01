@@ -1,4 +1,4 @@
-""""This module contains utility functions for classification tasks.""""
+"""This module contains utility functions for classification tasks."""
 
 import numpy as np
 

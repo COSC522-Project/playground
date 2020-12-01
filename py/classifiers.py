@@ -1,4 +1,4 @@
-""""
+"""
 This module contains functions to speed up the classification process. It 
 also contains an implementation of the maximum posterior probability (MPP) 
 classifier
@@ -7,7 +7,7 @@ TO DO
 -----
 * We can add an option to `classify()` to specify which kind of 
   dimensionality reduction algorithm to run. 
-""""
+"""
 
 import sys
 
