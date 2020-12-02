@@ -14,11 +14,12 @@ import time
 
 import numpy as np
 import scipy
+from sklearn.cluster import KMeans
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
-from sklearn.cluster import KMeans
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
 
 from . import util
 
@@ -153,14 +154,14 @@ class MPP:
         self.classes = None
         
     def fit(self, X, y, P=None):
-        """Fit the classier to the training data.
+        """Fit the model according to the given training data.
         
         Parameters
         ----------
         X : NumPy array, shape (n, d)
-            Array of n training points in d-dimensional space.
+            Array of n points in d-dimensional space.
         y : NumPy array, shape (n,)
-            Integer class labels for each training point.
+            Integer class labels for each point.
         P : array-like
             List of prior probabilities for each class. If not provided, the
             prior probabilities are taken to be equal.
@@ -169,6 +170,7 @@ class MPP:
         -------
         None. Modifies the class attributes.
         """
+        self.__init__(self.case)
         self.classes = np.unique(y)
         n_classes = len(self.classes)
         self.P = np.ones(n_classes)/n_classes if P is None else P
@@ -182,34 +184,38 @@ class MPP:
             self.cov_avg = np.sum(np.array(self.covs), axis=0) / n_classes
             self.var_avg = np.sum(np.diagonal(self.cov_avg)) / n_classes
             
-    def predict(self, X_test):
-        """Make predictions on new data.
+    def predict(self, X):
+        """Perform classification on samples in X.
         
         Parameters
         ----------
-        X_test : NumPy array, shape (n, d)
-            Array of n testing points in d-dimensional space.
+        X : NumPy array, shape (n, d)
+            Array of n points in d-dimensional space.
             
         Returns
         -------
         y_pred : NumPy array, shape (n,)
             Class labels for each testing point.
         """
-        y_pred = np.zeros(X_test.shape[0])
-        for i in range(X_test.shape[0]):
+        y_pred = np.zeros(X.shape[0])
+        for i in range(X.shape[0]):
             g = np.zeros(len(self.classes))
             for c in self.classes:
                 if self.case == 1:
-                    edist2 = util.euc2(self.means[c], X_test[i])
+                    edist2 = util.euc2(self.means[c], X[i])
                     g[c] = -edist2 / (2 * self.var_avg) + np.log(self.P[c] + 0.000001)
                 elif self.case == 2: 
-                    mdist2 = util.mah2(self.means[c], X_test[i], self.cov_avg)
+                    mdist2 = util.mah2(self.means[c], X[i], self.cov_avg)
                     g[c] = -mdist2 / 2 + np.log(self.P[c] + 0.000001)
                 elif self.case == 3:
-                    mdist2 = util.mah2(self.means[c], X_test[i], self.covs[c])
+                    mdist2 = util.mah2(self.means[c], X[i], self.covs[c])
                     g[c] = -mdist2 / 2 - np.log(np.linalg.det(self.covs[c])) / 2 + np.log(self.P[c] + 0.000001)
                 else:
                     print("Case number must be 1, 2, or 3.")
                     sys.exit(1)
             y_pred[i] = g.argmax()
         return y_pred
+    
+    
+    def score(self, X, y):
+        return accuracy_score(y, self.predict(X))
